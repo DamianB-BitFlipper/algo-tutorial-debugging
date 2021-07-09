@@ -33,12 +33,14 @@ def buggy_program():
     counter = App.globalGet(var_counter)
     increment_counter  = Seq([
         Assert(group_checks),
-        # Increment the counter only if the sender sends the owner more than 10 Algos
+        # Increment the counter if the sender sends the owner more than 10 Algos.
+        # Otherwise decrement the counter
         #
-        # The bug is that the transaction fee is not checked. So the owner might not be
-        # getting anything and all of the funds go to the fee sink
+        # The bug is that if `counter == 0` and it is decremented, it will be negative
+        # which is not supported by TEAL
         If(payment_txn.amount() >= Int(10 * 1000000),
            App.globalPut(var_counter, counter + Int(1)),
+           App.globalPut(var_counter, counter - Int(1)),
         ),
 
         Return(Int(1))

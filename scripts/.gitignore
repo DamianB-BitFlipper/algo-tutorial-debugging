@@ -5,3 +5,5 @@ combinedtransactions.tx
 groupedtransactions.tx
 signout.tx
 dr.msgp
+
+*.rej
