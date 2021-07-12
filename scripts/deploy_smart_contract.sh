@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Change the account address to an account under your control, this will be the onwer
+# Change the account address to an account under your control, this will be the owner
 CREATOR=QQSWFKMFBLSR5WKZJVDMRIP5VKF5QBET437WGMPCWYINQGX3KB534OGVLY
 APPROVAL_PROG=../assets/approval_program.teal
 CLEAR_PROG=../assets/clear_program.teal
