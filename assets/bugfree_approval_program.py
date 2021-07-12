@@ -40,7 +40,9 @@ def buggy_program():
         # which is not supported by TEAL
         If(payment_txn.amount() >= Int(10 * 1000000),
            App.globalPut(var_counter, counter + Int(1)),
-           App.globalPut(var_counter, counter - Int(1)),
+           If(counter > Int(0),
+              App.globalPut(var_counter, counter - Int(1)),
+           ),
         ),
 
         Return(Int(1))
