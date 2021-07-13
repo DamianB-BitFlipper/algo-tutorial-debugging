@@ -13,11 +13,11 @@ The smart contract is written in PyTEAL and interfaced with the `goal` program.
 - An understanding of TEAL code
 - `goal`
 - `tealdbg`
-- Chrome web-browser (other browsers are possible, but experience is not as good)
+- Chrome web browser (other browsers are possible, but the experience is not as good)
 
 ## (Buggy) Smart Contract
 
-The following is the PyTEAL code for a simple stateful smart contract. The smart contract records an owner address (the creator) during initialization. It then keeps track of a counter value. Whenever the onwer receives a transaction with >= 10 ALGOs, the counter will be incremented, otherwise it will be decremented. This functionality is executed as a group transaction where the first transaction is the payment to the owner and the second, the call to the smart contract.
+The following is the PyTEAL code for a simple stateful smart contract. The smart contract records an owner address (the creator) during initialization. It then keeps track of a counter value. Whenever the owner receives a transaction with >= 10 Algos, the counter will be incremented, otherwise, it will be decremented. This functionality is executed as a group transaction where the first transaction is the payment to the owner and the second, the call to the smart contract.
 
 ```python
 from pyteal import *
@@ -91,9 +91,9 @@ init_contract = Seq([
 ])
 ```
 
-The `increment_counter` block is executed during any normal application call. It performs the logic which checks if the owner is receiving more or less than 10 ALGOs and increments/decrements the counter respectively.
+The `increment_counter` block is executed during any normal application call. It performs the logic which checks if the owner is receiving more or less than 10 Algos and increments/decrements the counter respectively.
 
-It begins by checking the structure of the group transaction, that the first transaction is a payment transaction to the onwer and that the second transaction is an application call to this smart contract.
+It begins by checking the structure of the group transaction, that the first transaction is a payment transaction to the owner and that the second transaction is an application call to this smart contract.
 ```python
 # Assign the transactions to variables
 payment_txn = Gtxn[0]
@@ -127,7 +127,7 @@ increment_counter  = Seq([
 ])
 ```
 
-There is a bug in this smart contract, but where?!? If you are used to writing TEAL smart contracts, you may be able to spot it, but this bug is honetly inconspicious.
+There is a bug in this smart contract, but where?!? If you are used to writing TEAL smart contracts, you may be able to spot it, but this bug is honestly inconspicuous.
 
 ## Exposing the Bug
 
@@ -144,11 +144,11 @@ goal app create --creator <OWNER> --global-byteslices 1 --global-ints 1 --local-
 
 ### Non-buggy Smart Contract Call
 
-Once the smart contract is deployed, let's call it normally. This call will not expose the bug. Recall, in order to call the contract, it will have to be as a group transaction where the first transaction is a payment to the owner and the second transaction is the call to the smart contract. These transactions are created individually, grouped together, signed and then sent.
+Once the smart contract is deployed, let's call it normally. This call will not expose the bug. Recall, in order to call the contract, it will have to be as a group transaction where the first transaction is a payment to the owner and the second transaction is the call to the smart contract. These transactions are created individually, grouped together, signed, and then sent.
 
 ```bash
 # Create the unsigned transactions
-goal clerk send --amount 10000000 --from <ACCOUNT2> --to <OWNER> --out ./unsginedtransaction1.tx    # Sends 10 ALGOs to OWNER
+goal clerk send --amount 10000000 --from <ACCOUNT2> --to <OWNER> --out ./unsginedtransaction1.tx    # Sends 10 Algos to OWNER
 goal app call --app-id <APP_ID> --from <ACCOUNT2> --out ./unsginedtransaction2.tx
 
 # Atomically group the transactions
@@ -162,7 +162,7 @@ goal clerk sign -i groupedtransactions.tx -o signout.tx
 goal clerk rawsend --filename signout.tx
 ```
 
-Now let's view the global state of the smart contract. The counter should have been incremented to 1 since this transaction was for 10 ALGOs.
+Now let's view the global state of the smart contract. The counter should have been incremented to 1 since this transaction was for 10 Algos.
 
 ```bash
 goal app read --global --app-id <APP_ID>
@@ -184,13 +184,13 @@ goal app read --global --app-id <APP_ID>
 
 ### Buggy Smart Contract Call
 
-However, the smart contract is secretly buggy. Let's see if we can expose this bug. With the current global state, we will need to send two group transactions each with value less than 10 ALGOs to expose the bug.
+However, the smart contract is secretly buggy. Let's see if we can expose this bug. With the current global state, we will need to send two group transactions each with a value less than 10 Algos to expose the bug.
 
-This is the same code as above, just that the sending amount is 9 ALGOs instead of 10. Run this code twice. The first run should succeed just fine, but the second should fail.
+This is the same code as above, just that the sending amount is 9 Algos instead of 10. Run this code twice. The first run should succeed just fine, but the second should fail.
 
 ```bash
 # Create the unsigned transactions
-goal clerk send --amount 9000000 --from <ACCOUNT2> --to <OWNER> --out ./unsginedtransaction1.tx    # Sends 9 ALGOs to OWNER
+goal clerk send --amount 9000000 --from <ACCOUNT2> --to <OWNER> --out ./unsginedtransaction1.tx    # Sends 9 Algos to OWNER
 goal app call --app-id <APP_ID> --from <ACCOUNT2> --out ./unsginedtransaction2.tx
 
 # Atomically group the transactions
@@ -224,7 +224,7 @@ In order to debug a smart contract, two sources are necessary:
 1. The smart contract TEAL code (already have this)
 2. The debugger context
 
-The debugger context contains all of the necessary information (the transactions being issued, the global and local state, etc.) for the debugger to recreate the same enviroment where the smart contract failed.
+The debugger context contains all of the necessary information (the transactions being issued, the global and local state, etc.) for the debugger to recreate the same environment where the smart contract failed.
 
 Instead of sending the `signout.tx` from the second attempt which failed, we are going to dryrun it and save the debugger context.
 
@@ -242,9 +242,9 @@ tealdbg debug approval_program.teal -d dr.msgp --group-index 1
 
 #### Connecting to the Debugger
 
-This will launch a debugger instance accessible through the Chrome web-browser's debug console. It is possible to access the debugger through other web-browsers by adding the flag `--frontend web`, but the experience is not as good. This tutorial will debug the smart contract through the Chrome interface.
+This will launch a debugger instance accessible through the Chrome web browser's debug console. It is possible to access the debugger through other web-browsers by adding the flag `--frontend web`, but the experience is not as good. This tutorial will debug the smart contract through the Chrome interface.
 
-To open the debugger in Chrome, first connect to the debugger. Enter `chrome://inspect/` in the URL field, then click **Configure** and add `localhost:9392` as a target. The Algorand TEAL Debugger should appear as a Remote Target; click **inspect** to open up the debugger.
+To open the debugger in Chrome, connect to the debugger. Enter `chrome://inspect/` in the URL field, then click **Configure** and add `localhost:9392` as a target. The Algorand TEAL Debugger should appear as a Remote Target; click **inspect** to open up the debugger.
 
 <p align="center">
   <img src="images/remote_target.png" />
@@ -258,9 +258,9 @@ Once you click inspect, the debugger should be visible in full. The source code 
   <img src="images/debugger_view.png" />
 </p>
 
-On the top right, there are a few arrow shaped buttons to control the execution of the program. The most usefule is the "Step" button (F9) which progress the smart contract one step. When executing a smart contract in the debugger, none of the code causes any on-network effects. So for example, if there is a global value being set, this will be visible in the debugger environment only and will not take effect on the actual Algorand network.
+On the top right, there are a few arrow-shaped buttons to control the execution of the program. The most useful is the "Step" button (F9) which progresses the smart contract one step. When executing a smart contract in the debugger, none of the code causes any on-network effects. So for example, if there is a global value being set, this will be visible in the debugger environment only and will not take effect on the actual Algorand network.
 
-On the right, there is a "Scope" panel which lists the current debugger environement state. This state includes global variables, local variables, any scratch space and the stack. For this tutorial, we will monitor the stack to see how the bug surfaces. Make sure to click the dropdown arrow next to the "Stack" to inspect its contents.
+On the right, there is a "Scope" panel that lists the current debugger environment state. This state includes global variables, local variables, any scratch space, and the stack. For this tutorial, we will monitor the stack to see how the bug surfaces. Make sure to click the dropdown arrow next to the "Stack" to inspect its contents.
 
 <p align="center">
   <img src="images/scope_view.png" />
@@ -268,7 +268,7 @@ On the right, there is a "Scope" panel which lists the current debugger environe
 
 ##### Lines 2 - 24
 
-Stepping through the smart contract, lines 2 through 24 of the TEAL program correspond to the `Cond` statement in the PyTEAL program. Stepping through the teal program, you will see on the stack how the `txn OnCompletion` always pushes a 0 onto the stack. Since the transaction we are debugging was an ordinary call to the smart contract, it is of type NoOp which if value 0. Final the last block, lines 22 -24 evaluates to true and performs a jump to the `increment_counter` block of the PyTEAL program.
+Stepping through the smart contract, lines 2 through 24 of the TEAL program correspond to the `Cond` statement in the PyTEAL program. Stepping through the teal program, you will see on the stack how the `txn OnCompletion` always pushes a 0 onto the stack. Since the transaction we are debugging was an ordinary call to the smart contract, it is of type NoOp which if value 0. Finally, the last block, lines 22 -24, evaluates to True and performs a jump to the `increment_counter` block of the PyTEAL program.
 
 ```python
 program = Cond(
@@ -306,13 +306,13 @@ If(payment_txn.amount() >= Int(10 * 1000000),
 ),
 ```
 
-Stepping through the smart contract, line 43 push `9000000` (9 Algos) to the stack and line 44 pushes `10000000` (10 Algos). The `>=` comparison on line 45 will push a `0` (False), and thus the branch on line 46 will not be taken.
+Stepping through the smart contract, line 43 pushes `9000000` (9 Algos) to the stack and line 44 pushes `10000000` (10 Algos). The `>=` comparison on line 45 will push a `0` (False), and thus the branch on line 46 will not be taken.
 
 <p align="center">
   <img src="images/before_branch.png" />
 </p>
 
-Lines 47 through 51 are the decrementing (False) branch of the `If` statment. Line 49 loads the current value of the `counter` onto the stack. This should be 0. Line 50 loads the number 1 and line 51 subtracts the latter from the former (0 - 1). However, stepping on line 51 raises an exception. We have located our bug!
+Lines 47 through 51 are the decrementing (False) branch of the `If` statement. Line 49 loads the current value of the `counter` onto the stack. This should be 0. Line 50 loads the number 1 and line 51 subtracts the latter from the former (0 - 1). However, stepping on line 51 raises an exception. We have located our bug!
 
 <p align="center">
   <img src="images/exception.png" />
@@ -334,7 +334,7 @@ If(payment_txn.amount() >= Int(10 * 1000000),
 ),
 ```
 
-This should do the trick. No we have to recompile the PyTEAL smart contract and send the updated smart contract to the network.
+This should do the trick. Now we have to recompile the PyTEAL smart contract and send the updated smart contract to the network.
 
 ```bash
 # Make the approval program
@@ -367,13 +367,13 @@ If the `counter` is 0, this should output:
 }
 ```
 
-If your `counter` is non-zero for whatever reason, send a few transaction with less than 10 Algos to decrement it down to 0. (To send such transaction follow the following code block which used to trigger the bug. It is the same transaction.)
+If your `counter` is non-zero for whatever reason, send a few transactions with less than 10 Algos to decrement it down to 0. (To send such transaction follow the following code block which used to trigger the bug. It is the same transaction.)
 
-Now let's try to trigger the bug. Sending a transaction with less than 10 Algos when the `counter` is 0 used to cause an exception. The update should fix this behaviour and simply leave the `counter` at 0 without exception.
+Now let's try to trigger the bug. Sending a transaction with less than 10 Algos when the `counter` is 0 used to cause an exception. The update should fix this behavior and simply leave the `counter` at 0 without exception.
 
 ```bash
 # Create the unsigned transactions
-goal clerk send --amount 9000000 --from <ACCOUNT2> --to <OWNER> --out ./unsginedtransaction1.tx    # Sends 9 ALGOs to OWNER
+goal clerk send --amount 9000000 --from <ACCOUNT2> --to <OWNER> --out ./unsginedtransaction1.tx    # Sends 9 Algos to OWNER
 goal app call --app-id <APP_ID> --from <ACCOUNT2> --out ./unsginedtransaction2.tx
 
 # Atomically group the transactions
@@ -397,14 +397,14 @@ goal app read --global --app-id <APP_ID>
 
 ## Conclusion
 
-This tutorial covers the process of debugging a smart contract from start to finish. Neither the smart contract nor the bug within are complicated to understand, but the debugging steps are essentially the same for any Algorand application, making this a valuable example.
+This tutorial covers the process of debugging a smart contract from start to finish. Neither the smart contract nor the bug within is complicated to understand, but the debugging steps are essentially the same for any Algorand application, making this a valuable example.
 
 The topics covered in this tutorial include:
 
-- Launcing a simple smart contract
+- Deploying a simple smart contract
 - Exposing a bug in the smart contract
 - Setting up the debugger within the Chrome debug console
-- Preparing the debugger context and transaction data which trigger the bug
+- Preparing the debugger context and transaction data that trigger the bug
 - Using `tealdbg` to load and step through the smart contract TEAL code
 - Identifying and patching the bug
 - Validating that the bug is indeed fixed
